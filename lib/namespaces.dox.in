@@ -1,6 +1,0 @@
-/**
- * The root namespace for @PROJECT_NAME@.
- */
-namespace hocon {
-
-}

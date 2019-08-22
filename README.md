@@ -1,11 +1,9 @@
-# C++ HOCON Parser
-
-![Travis CI](https://travis-ci.org/puppetlabs/cpp-hocon.svg)
-![Appveyor](https://ci.appveyor.com/api/projects/status/github/puppetlabs/cpp-hocon?svg=true)
-
-
+# A dependency-free C++ HOCON Parser
 
 This is a port of the TypesafeConfig library to C++.
+
+It is a modified version of the puppetlabs original, using the bazel build system
+and with dependencies on Leatherman and Boost removed.
 
 The library provides C++ support for the [HOCON configuration file format](https://github.com/typesafehub/config/blob/master/HOCON.md).
 
@@ -36,46 +34,3 @@ M=MMMMMMMM++  FOR HUMANS   ++M8MMMMMM7M
   7MM   MMMMMMMMMMM88MMMMMMMMMM8   MM8
   7MM   MMMDMMMM?MM88MM?MMMMOMM8   MM8
 ```
-
-## Caveats
-
-This is a mostly complete implementation of the HOCON format. It currently has some known limitations
-
-* Include requires the location specifier, i.e. `include "foo"` won't work but `include file("foo")` will. URL is not yet implemented, and classpath won't be supported as it makes less sense outside of the JVM.
-* Unicode testing is absent so support is unknown. There are likely things that won't work.
-
-
-## Build Requirements
-
-* OSX or Linux
-* GCC >= 4.8 or Clang >= 3.4 (with libc++)
-* CMake >= 3.2.2
-* Boost Libraries >= 1.54
-* [Leatherman](https://github.com/puppetlabs/leatherman)
-
-
-## Pre-Build
-
-Prepare the cmake release environment:
-
-    $ mkdir release
-    $ cd release
-    $ cmake ..
-
-
-Optionally, also prepare the debug environment:
-
-    $ mkdir debug
-    $ cd debug
-    $ cmake -DCMAKE_BUILD_TYPE=Debug ..
-
-
-## Building
-
-1. Enter your build environment of choice, i.e. `cd release` or `cd debug`
-2. `make`
-3. (optional) install with `make install`
-
-## Testing
-
-Run tests with `make test`.

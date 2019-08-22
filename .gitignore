@@ -1,21 +1,5 @@
-# Misc files
-*.swp
-.DS_Store
-Gemfile.local
-Gemfile.lock
-
-# Generated files
-/lib/inc/*/export.h
-/lib/inc/*/version.h
-/lib/tests/fixtures.hpp
-/lib/Doxyfile
-/lib/html/
-/lib/docs/
-/*debug*/
-/*release*/
-/.idea/
-/*build*/
-acceptance/.bundle/
-acceptance/vendor/
-acceptance/junit/
-acceptance/log/
+/bazel-*
+/output/
+.bazelversion
+.*.swp
+*~
