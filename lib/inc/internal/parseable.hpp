@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hocon/config_parseable.hpp>
-#include <boost/nowide/fstream.hpp>
 #include <internal/simple_config_origin.hpp>
 #include <hocon/config_object.hpp>
 #include <hocon/config_include_context.hpp>

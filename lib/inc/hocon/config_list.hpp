@@ -1,7 +1,6 @@
 #pragma once
 
 #include "types.hpp"
-#include "export.h"
 #include <vector>
 
 namespace hocon {
@@ -33,8 +32,7 @@ namespace hocon {
      * implementations will break.
      *
      */
-
-    class LIBCPP_HOCON_EXPORT config_list : public config_value {
+    class config_list : public config_value {
     public:
         config_list(shared_origin origin) : config_value(move(origin)) {}
 

@@ -1,5 +1,4 @@
 #include <internal/values/config_null.hpp>
-#include <boost/blank.hpp>
 
 using namespace std;
 
@@ -21,7 +20,7 @@ namespace hocon {
     }
 
     unwrapped_value config_null::unwrapped() const {
-        return boost::blank();
+        return nullptr;
     }
 
     bool config_null::operator==(config_value const& other) const {

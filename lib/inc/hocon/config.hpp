@@ -9,11 +9,10 @@
 #include "config_list.hpp"
 #include "config_exception.hpp"
 #include "path.hpp"
+
 #include <vector>
 #include <string>
 #include <set>
-#include "export.h"
-#include <leatherman/locale/locale.hpp>
 
 namespace hocon {
 
@@ -169,7 +168,7 @@ namespace hocon {
      * interface is likely to grow new methods over time, so third-party
      * implementations will break.
      */
-    class LIBCPP_HOCON_EXPORT config : public config_mergeable, public std::enable_shared_from_this<config> {
+    class config : public config_mergeable, public std::enable_shared_from_this<config> {
         friend class config_object;
         friend class config_value;
         friend class config_parseable;
@@ -574,26 +573,7 @@ namespace hocon {
         virtual unwrapped_value get_any_ref(std::string const& path) const;
         virtual std::shared_ptr<const config_value> get_value(std::string const& path) const;
 
-        template<typename T>
-        std::vector<T> get_homogeneous_unwrapped_list(std::string const& path) const {
-            auto list = boost::get<std::vector<unwrapped_value>>(get_list(path)->unwrapped());
-            std::vector<T> T_list;
-            for (auto item : list) {
-                try {
-                    T_list.push_back(boost::get<T>(item));
-                } catch (boost::bad_get &ex) {
-                    throw config_exception(leatherman::locale::format("The list did not contain only the desired type."));
-                }
-            }
-            return T_list;
-        }
-
         virtual shared_list get_list(std::string const& path) const;
-        virtual std::vector<bool> get_bool_list(std::string const& path) const;
-        virtual std::vector<int> get_int_list(std::string const& path) const;
-        virtual std::vector<int64_t> get_long_list(std::string const& path) const;
-        virtual std::vector<double> get_double_list(std::string const& path) const;
-        virtual std::vector<std::string> get_string_list(std::string const& path) const;
         virtual std::vector<shared_object> get_object_list(std::string const& path) const;
         virtual std::vector<shared_config> get_config_list(std::string const& path) const;
 
@@ -727,8 +707,5 @@ namespace hocon {
 
         shared_object _object;
     };
-
-    template<>
-    std::vector<int64_t> config::get_homogeneous_unwrapped_list(std::string const& path) const;
 
 }  // namespace hocon

@@ -2,7 +2,6 @@
 
 #include "types.hpp"
 #include "config_syntax.hpp"
-#include "export.h"
 
 namespace hocon {
     /**
@@ -22,7 +21,7 @@ namespace hocon {
      *
      * ClassLoader is Java-specific, so it was not ported to C++.
      */
-    class LIBCPP_HOCON_EXPORT config_parse_options {
+    class config_parse_options {
     public:
         /**
          * Gets an instance of <code>config_parse_options</code> with all fields

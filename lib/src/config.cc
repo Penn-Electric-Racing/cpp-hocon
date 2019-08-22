@@ -15,17 +15,40 @@
 #include <internal/parseable.hpp>
 #include <internal/simple_includer.hpp>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <leatherman/util/environment.hpp>
-#include <leatherman/locale/locale.hpp>
-
 #include <cfenv>
-
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
+#include <sstream>
 
 using namespace std;
+
+static std::string & trim_left(std::string & str) {
+  auto it2 =  std::find_if( str.begin() , str.end() , 
+          [](char ch){ return !std::isspace(ch); } );
+  str.erase( str.begin() , it2);
+  return str;   
+}
+
+static std::string & trim_left_copy_nonalpha(std::string & str) {
+  auto it2 =  std::find_if( str.begin() , str.end() , 
+          [](char ch){ return std::isalpha(ch); } );
+  str.erase( str.begin() , it2);
+  return str;   
+}
+
+static std::string & trim_right(std::string & str) {
+  auto it1 =  std::find_if( str.rbegin() , str.rend() , 
+          [](char ch){ return !std::isspace(ch); } );
+  str.erase( it1.base() , str.end() );
+  return str;   
+}
+
+static std::string & trim(std::string & str) {
+   return trim_left(trim_right(str));
+}
+
+static std::string& trim_copy(const std::string& str) {
+    auto a = str;
+    return trim(a);
+}
 
 namespace hocon {
 
@@ -89,7 +112,7 @@ namespace hocon {
             if (_object->get_resolve_status() == resolve_status::RESOLVED) {
                 throw ex;
             }
-            throw config_exception(_("{1} has not been resolved, you need to call config::resolve()", raw_path.render()));
+            throw config_exception(raw_path.render() + " has not been resolved, you need to call config::resolve()");
         }
         return peeked;
     }
@@ -161,7 +184,7 @@ namespace hocon {
         if (expected != config_value::type::UNSPECIFIED &&
                 v->value_type() != expected &&
                 v->value_type() != config_value::type::CONFIG_NULL) {
-            throw wrong_type_exception(_("{1} could not be converted to the requested type", original_path.render()));
+            throw wrong_type_exception(original_path.render() + " could not be converted to the requested type");
         } else {
             return v;
         }
@@ -184,7 +207,7 @@ namespace hocon {
             if (self->get_resolve_status() == resolve_status::RESOLVED) {
                 throw ex;
             }
-            throw config_exception(_("{1} has not been resolved, you need to call config::resolve()", desired_path.render()));
+            throw config_exception(desired_path.render() + "has not been resolved, you need to call config::resolve()");
         }
     }
 
@@ -248,33 +271,13 @@ namespace hocon {
         return dynamic_pointer_cast<const config_list>(find(path_expression, config_value::type::LIST));
     }
 
-    vector<bool> config::get_bool_list(string const& path) const {
-        return get_homogeneous_unwrapped_list<bool>(path);
-    }
-
-    std::vector<int> config::get_int_list(std::string const& path) const {
-        return get_homogeneous_unwrapped_list<int>(path);
-    }
-
-    std::vector<int64_t> config::get_long_list(std::string const& path) const {
-        return get_homogeneous_unwrapped_list<int64_t>(path);
-    }
-
-    std::vector<double> config::get_double_list(std::string const& path) const {
-        return get_homogeneous_unwrapped_list<double>(path);
-    }
-
-    std::vector<std::string> config::get_string_list(std::string const& path) const {
-        return get_homogeneous_unwrapped_list<string>(path);
-    }
-
     std::vector<shared_object> config::get_object_list(std::string const& path) const {
         auto list = get_list(path);
         vector<shared_object> object_list;
         for (auto item : *list) {
             shared_object obj = dynamic_pointer_cast<const config_object>(item);
             if (obj == nullptr) {
-                throw new config_exception(_("List does not contain only config_objects."));
+                throw new config_exception("List does not contain only config_objects.");
             }
             object_list.push_back(obj);
         }
@@ -287,30 +290,11 @@ namespace hocon {
         for (auto item : *list) {
             shared_config obj = dynamic_pointer_cast<const config>(item);
             if (obj == nullptr) {
-                throw config_exception(_("List does not contain only configs."));
+                throw config_exception("List does not contain only configs.");
             }
             object_list.push_back(obj);
         }
         return object_list;
-    }
-
-    template<>
-    std::vector<int64_t> config::get_homogeneous_unwrapped_list(std::string const& path) const {
-        auto list = boost::get<std::vector<unwrapped_value>>(get_list(path)->unwrapped());
-        std::vector<int64_t> long_list;
-        for (auto item : list) {
-            // Even if the parser stored the number as an int, we want to treat it as a long.
-            try {
-                long_list.push_back(boost::get<int64_t>(item));
-            } catch (std::exception& ex) {
-                try {
-                    long_list.push_back(boost::get<int>(item));
-                } catch (boost::bad_get &ex) {
-                    throw config_exception(_("The list did not contain only the desired type."));
-                }
-            }
-        }
-        return long_list;
     }
 
     duration config::get_duration(string const& path) const {
@@ -324,7 +308,7 @@ namespace hocon {
         } else if (auto str = dynamic_pointer_cast<const config_string>(v)) {
             return parse_duration(str->transform_to_string(), str->origin(), path);
         } else {
-            throw bad_value_exception(*v->origin(), path, _("Value at '{1}' was not a number or string.", path));
+            throw bad_value_exception(*v->origin(), path, "Value at '" + path + "' was not a number or string.");
         }
     }
 
@@ -354,10 +338,10 @@ namespace hocon {
                 result = timespan.first / 86400;
                 break;
             default:
-                throw config_exception(_("Not a valid time_unit"));
+                throw config_exception("Not a valid time_unit");
         }
         if ((result >= 0) != (timespan.first >= 0)) {
-            throw config_exception(_("as_long: Overflow occurred during time conversion"));
+            throw config_exception("as_long: Overflow occurred during time conversion");
         }
         return result;
     }
@@ -391,10 +375,10 @@ namespace hocon {
                 seconds = number * 86400;
                 break;
             default:
-                throw config_exception(_("Not a valid time_unit"));
+                throw config_exception("Not a valid time_unit");
         }
         if ((number >= 0) != (seconds >= 0)) {
-            throw config_exception(_("convert_long: Overflow occurred during time conversion"));
+            throw config_exception("convert_long: Overflow occurred during time conversion");
         }
         return duration(seconds, nanos);
     }
@@ -432,10 +416,10 @@ namespace hocon {
                 nanos = fmod(number * 86400, 1) * 1000000000;
                 break;
             default:
-                throw config_exception(_("Not a valid time_unit"));
+                throw config_exception("Not a valid time_unit");
         }
         if (!isnormal(seconds) || !isnormal(nanos)) {
-            throw config_exception(_("convert_double: Overflow occurred during time conversion"));
+            throw config_exception("convert_double: Overflow occurred during time conversion");
         }
         return duration(static_cast<int64_t>(seconds), static_cast<int>(nanos));
     }
@@ -456,34 +440,40 @@ namespace hocon {
         } else if (unit_string == "d" || unit_string == "days") {
             return time_unit::DAYS;
         } else {
-            throw config_exception(_("Could not parse time unit '{1}' (try ns, us, ms, s, m, h, or d)", unit_string));
+            throw config_exception("Could not parse time unit '" + unit_string + "' (try ns, us, ms, s, m, h, or d)");
         }
     }
 
     duration config::parse_duration(string input, shared_origin origin_for_exception, string path_for_exception) {
-        boost::algorithm::trim(input);
-        string original_unit_string = boost::algorithm::trim_left_copy_if(input, !boost::algorithm::is_alpha());
+        trim(input);
+        string original_unit_string = trim_left_copy_nonalpha(input);
         string unit_string = original_unit_string;
-        string number_string = boost::algorithm::trim_copy(input.substr(0, input.length() - unit_string.length()));
+        string number_string = trim_copy(input.substr(0, input.length() - unit_string.length()));
 
         if (number_string.empty()) {
-            throw bad_value_exception(*origin_for_exception, path_for_exception, _("No number in duration value '{1}'", input));
+            throw bad_value_exception(*origin_for_exception, path_for_exception, "No number in duration value '" + input + "'");
         }
 
         if (unit_string.length() > 2 && unit_string.back() != 's') {
             unit_string += "s";
         }
 
-        try {
-            int64_t number = boost::lexical_cast<int64_t>(number_string);
+        int64_t number;
+
+        std::stringstream number_converter;
+        number_converter << number_string;
+        number_converter >> number;
+        if (!number_converter.fail() && number_converter.str().length() == 0) {
             return convert(number, get_units(unit_string));
-        } catch (boost::bad_lexical_cast& ex) {
-            try {
-                double number = boost::lexical_cast<double>(number_string);
-                return convert(number, get_units(unit_string));
-            }
-            catch (boost::bad_lexical_cast& ex) {
-                throw bad_value_exception(*origin_for_exception, path_for_exception, _("Value '{1}' could not be converted to a number.", number_string));
+        } else {
+            number_converter.str(std::string());
+            number_converter << number_string;
+            double d;
+            number_converter >> d;
+            if (!number_converter.fail() && number_converter.str().length() == 0) {
+                return convert(d, get_units(unit_string));
+            } else {
+                throw bad_value_exception(*origin_for_exception, path_for_exception, "Value '" + number_string + "' could not be converted to a number.");
             }
         }
     }
@@ -496,7 +486,7 @@ namespace hocon {
         if (auto newobj = dynamic_pointer_cast<const config_object>(_object->with_fallback(other))) {
             return newobj->to_config();
         } else {
-            throw bug_or_broken_exception(_("Creating new object from config_object did not return a config_object"));
+            throw bug_or_broken_exception("Creating new object from config_object did not return a config_object");
         }
     }
 
@@ -542,7 +532,7 @@ namespace hocon {
 
     void config::check_valid(shared_config reference, std::vector<std::string> restrict_to_paths) const {
         // TODO: implement this once resolve functionality is working
-        throw runtime_error(_("Method not implemented"));
+        throw runtime_error("Method not implemented");
     }
 
     shared_value config::peek_path(path desired_path) const {
@@ -560,11 +550,14 @@ namespace hocon {
 
     shared_object config::env_variables_as_config_object() {
         unordered_map<string, shared_value> values;
+        throw runtime_error("Env variables as config disabled");
+        /*
         leatherman::util::environment::each([&](string& k, string& v) {
             auto origin = make_shared<simple_config_origin>("env var " + k);
             values.emplace(k, make_shared<config_string>(origin, v, config_string_type::QUOTED));
             return true;
         });
+        */
         auto origin = make_shared<simple_config_origin>("env variables");
         return make_shared<simple_config_object>(origin, move(values), resolve_status::RESOLVED, false);
     }

@@ -5,12 +5,27 @@
 #include <internal/config_document_parser.hpp>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include <leatherman/locale/locale.hpp>
-
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
 
 using namespace std;
+
+static std::string & trim_left(std::string & str) {
+  auto it2 =  std::find_if( str.begin() , str.end() , 
+          [](char ch){ return !std::isspace(ch); } );
+  str.erase( str.begin() , it2);
+  return str;   
+}
+
+static std::string & trim_right(std::string & str) {
+  auto it1 =  std::find_if( str.rbegin() , str.rend() , 
+          [](char ch){ return !std::isspace(ch); } );
+  str.erase( it1.base() , str.end() );
+  return str;   
+}
+
+static std::string & trim(std::string & str) {
+   return trim_left(trim_right(str));
+}
+
 
 namespace hocon {
     simple_config_document::simple_config_document(shared_ptr<const config_node_root> root,
@@ -20,7 +35,7 @@ namespace hocon {
     unique_ptr<config_document> simple_config_document::with_value_text(string path, string new_value) const
     {
         if (new_value.empty()) {
-            throw new config_exception(_("empty value for {1} passed to with_value_text", path));
+            throw new config_exception("empty value for " + path + " passed to with_value_text");
         }
 
         shared_origin origin = make_shared<simple_config_origin>("single value parsing");
@@ -36,12 +51,12 @@ namespace hocon {
                                                                    shared_ptr<config_value> new_value) const
     {
         if (!new_value) {
-            throw config_exception(_("null value for {1} passed to with_value", path));
+            throw config_exception("null value for " + path + " passed to with_value");
         }
         config_render_options options = config_render_options();
         options = options.set_origin_comments(false);
         string rendered = new_value->render(options);
-        boost::trim(rendered);
+        trim(rendered);
         return with_value_text(path, rendered);
     }
 

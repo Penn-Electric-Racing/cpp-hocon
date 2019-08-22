@@ -1,6 +1,5 @@
 #include <internal/parseable.hpp>
 #include <sstream>
-#include <boost/algorithm/string/predicate.hpp>
 #include <internal/nodes/abstract_config_node.hpp>
 #include <internal/nodes/config_node_object.hpp>
 #include <internal/simple_config_document.hpp>
@@ -11,20 +10,49 @@
 #include <internal/config_document_parser.hpp>
 #include <internal/simple_include_context.hpp>
 #include <internal/config_parser.hpp>
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#include <boost/thread/tss.hpp>
-#pragma GCC diagnostic pop
 #include <vector>
 #include <numeric>
-#include <leatherman/util/scope_exit.hpp>
-#include <leatherman/locale/locale.hpp>
-#include <boost/filesystem.hpp>
-
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
+#include <fstream>
 
 using namespace std;
+
+
+// replace boost
+static bool ends_with(std::string const &fullString, std::string const &ending) {
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
+    }
+}
+
+thread_local std::map< void*, std::shared_ptr< void > > thread_specific_ptr_data;
+
+template< typename T >
+class thread_specific_ptr {
+public:
+    T* get() const
+    {
+        auto it = thread_specific_ptr_data.find((void*)this);
+        if (it != thread_specific_ptr_data.end())
+            return static_cast< T* >(it->second.get());
+        return nullptr;
+    }
+    void reset(T* v) {
+        thread_specific_ptr_data[this].reset(v);
+    }
+    void reset() {
+        thread_specific_ptr_data[this].reset();
+    }
+};
+
+class scope_exit {
+public:
+    scope_exit(const std::function<void()>& f) : f_(f) {}
+    ~scope_exit() { f_(); }
+private:
+    std::function<void()> f_;
+};
 
 namespace hocon {
 
@@ -56,9 +84,9 @@ namespace hocon {
     }
 
     config_syntax parseable::syntax_from_extension(std::string name) {
-        if (boost::algorithm::ends_with(name, ".json")) {
+        if (ends_with(name, ".json")) {
             return config_syntax::JSON;
-        } else if (boost::algorithm::ends_with(name, ".conf")) {
+        } else if (ends_with(name, ".conf")) {
             return config_syntax::CONF;
         } else {
             return config_syntax::UNSPECIFIED;
@@ -146,12 +174,12 @@ namespace hocon {
         if (auto obj = dynamic_pointer_cast<const config_object>(value)) {
             return obj;
         } else {
-            throw wrong_type_exception(*value->origin(), "", _("object at file root"), value->value_type_name());
+            throw wrong_type_exception(*value->origin(), "", "object at file root", value->value_type_name());
         }
     }
 
     shared_object parseable::parse(config_parse_options const& options) const {
-        static boost::thread_specific_ptr<vector<shared_ptr<const parseable>>> parse_stack;
+        static thread_specific_ptr<vector<shared_ptr<const parseable>>> parse_stack;
         if (!parse_stack.get()) {
             // Initialize the stack
             parse_stack.reset(new vector<shared_ptr<const parseable>>());
@@ -162,11 +190,12 @@ namespace hocon {
             string stacktrace = accumulate(pstack->begin(), pstack->end(), string(), [](string s, shared_ptr<const parseable> p) {
                 return s + '\t' + p->to_string() + '\n';
             });
-            throw parse_exception(*_initial_origin, _("include statements nested more than {1} times, you probably have a cycle in your includes. Trace:\n{2}", std::to_string(MAX_INCLUDE_DEPTH), stacktrace));
+            throw parse_exception(*_initial_origin, "include statements nested more than " + std::to_string(MAX_INCLUDE_DEPTH) + " times, you probably have a cycle in your includes. Trace:\n" + stacktrace);
         }
 
         pstack->push_back(shared_from_this());
-        leatherman::util::scope_exit([&]() {
+        // call after return when exiting scope
+        scope_exit scope([&]() {
             pstack->pop_back();
             if (pstack->empty()) {
                 parse_stack.reset();
@@ -197,13 +226,13 @@ namespace hocon {
     shared_value parseable::parse_value(shared_origin origin, config_parse_options const& final_options) const {
         try {
             return raw_parse_value(origin, final_options);
-        } catch (boost::filesystem::filesystem_error& e) {
+        } catch (std::ios_base::failure& e) {
             if (final_options.get_allow_missing()) {
                 return make_shared<simple_config_object>(
                         make_shared<simple_config_origin>(origin->description() + " (not found)"),
                         unordered_map<string, shared_value>());
             } else {
-                throw io_exception(*origin, _("{1}: {2}", typeid(*this).name(), e.what()));
+                throw io_exception(*origin, std::string(typeid(*this).name()) + ": " + e.what());
             }
         }
     }
@@ -250,14 +279,14 @@ namespace hocon {
                                                                config_parse_options const& final_options) const {
         try {
             return raw_parse_document(origin, final_options);
-        } catch (boost::filesystem::filesystem_error& e) {
+        } catch (std::ios_base::failure& e) {
             if (final_options.get_allow_missing()) {
                 shared_node_list children;
                 children.push_back(make_shared<config_node_object>(shared_node_list { }));
                 return make_shared<simple_config_document>(make_shared<config_node_root>(children, origin),
                                                            final_options);
             } else {
-                throw config_exception(_("exception loading {1}: {2}", origin->description(), e.what()));
+                throw config_exception("exception loading " + origin->description() + ": " + e.what());
             }
         }
     }
@@ -299,7 +328,10 @@ namespace hocon {
     }
 
     unique_ptr<istream> parseable_file::reader() const {
-        return unique_ptr<istream>(new boost::nowide::ifstream(_input.c_str()));
+        std::ifstream *is = new std::ifstream();
+        is->exceptions(is->exceptions() | std::ios::failbit);
+        is->open(_input.c_str());
+        return unique_ptr<istream>(is);
     }
 
     shared_origin parseable_file::create_origin() const {
@@ -330,7 +362,7 @@ namespace hocon {
     }
 
     std::unique_ptr<std::istream> parseable_resources::reader() const {
-        throw config_exception(_("reader() should not be called on resources"));
+        throw config_exception("reader() should not be called on resources");
     }
 
     shared_origin parseable_resources::create_origin() const {

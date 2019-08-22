@@ -4,13 +4,17 @@
 #include <internal/values/simple_config_object.hpp>
 #include <internal/parseable.hpp>
 #include <hocon/config_exception.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <leatherman/locale/locale.hpp>
-
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
 
 using namespace std;
+
+// replace boost
+static bool ends_with(std::string const &fullString, std::string const &ending) {
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
+    }
+}
 
 namespace hocon {
 
@@ -19,7 +23,7 @@ namespace hocon {
     shared_includer simple_includer::with_fallback(shared_includer fallback) const {
         auto self = shared_from_this();
         if (self == fallback) {
-            throw config_exception(_("Trying to create includer cycle"));
+            throw config_exception("Trying to create includer cycle");
         } else if (_fallback == fallback) {
             return self;
         } else if (_fallback) {
@@ -80,7 +84,7 @@ namespace hocon {
     shared_object simple_includer::from_basename(std::shared_ptr<name_source> source, std::string name,
                                                  config_parse_options options) {
         shared_object obj;
-        if (boost::algorithm::ends_with(name, ".conf") || boost::algorithm::ends_with(name, ".json")) {
+        if (ends_with(name, ".conf") || ends_with(name, ".json")) {
             shared_parseable p(nullptr);
             if (source->context_initialized()) {
                 p = source->name_to_parseable(name, options);
@@ -123,7 +127,7 @@ namespace hocon {
             if (!options.get_allow_missing() && !got_something) {
                 if (fails.empty()) {
                     // this should not happen
-                    throw config_exception(_("Should not be reached: nothing found but no exceptions thrown"));
+                    throw config_exception("Should not be reached: nothing found but no exceptions thrown");
                 } else {
                     string sb;
                     for (auto &e : fails) {
@@ -156,7 +160,7 @@ namespace hocon {
         auto p = get_context()->relative_to(name);
         if (p == nullptr) {
             // avoid returning null
-            return parseable::new_not_found(name, _("include was not found: '{1}'", name), move(parse_options));
+            return parseable::new_not_found(name, "include was not found: '" + name + "'", move(parse_options));
         } else {
             return p;
         }
@@ -172,7 +176,7 @@ namespace hocon {
         auto p = get_context()->relative_to(name);
         if (p == nullptr) {
             // avoid returning null
-            return parseable::new_not_found(name, _("include was not found: '{1}'", name), move(parse_options));
+            return parseable::new_not_found(name, "include was not found: '" + name + "'", move(parse_options));
         } else {
             return p;
         }

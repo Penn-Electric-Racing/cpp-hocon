@@ -3,13 +3,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Waddress"
-#if defined(__GNUC__) && __GNUC__ > 5
-#pragma GCC diagnostic ignored "-Wnonnull-compare"
-#endif
-#include "boost/variant.hpp"
-#pragma GCC diagnostic pop
+#include <nlohmann/json.hpp>
 
 namespace hocon {
 
@@ -37,9 +31,7 @@ namespace hocon {
     class config_list;
     using shared_list = std::shared_ptr<const config_list>;
 
-    typedef boost::make_recursive_variant<boost::blank, std::string, int64_t, double, int, bool,
-            std::vector<boost::recursive_variant_>, std::unordered_map<std::string,
-                    boost::recursive_variant_>>::type unwrapped_value;
+    typedef nlohmann::json unwrapped_value;
 
     class container;
     using shared_container = std::shared_ptr<const container>;

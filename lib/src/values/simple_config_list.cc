@@ -5,12 +5,9 @@
 #include <internal/resolve_context.hpp>
 #include <internal/resolve_source.hpp>
 #include <internal/resolve_result.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <leatherman/locale/locale.hpp>
 
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
+#include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -37,7 +34,7 @@ namespace hocon {
     simple_config_list::simple_config_list(shared_origin origin, std::vector<shared_value> value,
                                            resolve_status status) : simple_config_list(move(origin), move(value)){
         if (status != _resolved) {
-            throw config_exception(_("simple_config_list created with wrong resolve status"));
+            throw config_exception("simple_config_list created with wrong resolve status");
         }
     }
 
@@ -127,8 +124,9 @@ namespace hocon {
                 if (options.get_origin_comments()) {
                     // Could be done more efficiently with a split_iterator, but those are trickier to use with range-for.
                     vector<string> lines;
-                    boost::algorithm::split(lines, v->origin()->description(), boost::is_any_of("\n"));
-                    for (auto& l : lines) {
+                    std::istringstream s(v->origin()->description());
+                    std::string l;
+                    while (std::getline(s, l, '\n')) {
                         indent(sb, num_indent+1, options);
                         sb.push_back('#');
                         if (!l.empty()) {

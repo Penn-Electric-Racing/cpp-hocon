@@ -4,7 +4,6 @@
 #include "hocon/config_exception.hpp"
 #include <hocon/config_syntax.hpp>
 
-#include <boost/nowide/fstream.hpp>
 #include <vector>
 #include <queue>
 #include <string>

@@ -2,7 +2,6 @@
 
 #include "types.hpp"
 #include "config_parse_options.hpp"
-#include "export.h"
 
 namespace hocon {
 
@@ -18,7 +17,7 @@ namespace hocon {
      * interface is likely to grow new methods over time, so third-party
      * implementations will break.
      */
-    class LIBCPP_HOCON_EXPORT config_include_context {
+    class config_include_context {
     public:
         config_include_context() : _cur_dir(new std::string("")) {}
         /**

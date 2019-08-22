@@ -1,6 +1,5 @@
 #include <internal/default_transformer.hpp>
 #include <hocon/config_value.hpp>
-#include <boost/lexical_cast.hpp>
 #include <internal/values/config_long.hpp>
 #include <internal/values/config_double.hpp>
 #include <internal/values/config_null.hpp>
@@ -8,10 +7,8 @@
 #include <internal/values/config_string.hpp>
 #include <hocon/config_object.hpp>
 #include <hocon/config_exception.hpp>
-#include <leatherman/locale/locale.hpp>
 
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
+#include <sstream>
 
 using namespace std;
 
@@ -20,19 +17,22 @@ namespace hocon {
     shared_value default_transformer::transform(shared_value value, config_value::type requested) {
         if (value->value_type() == config_value::type::STRING) {
             string s = value->transform_to_string();
+            std::stringstream number_converter;
             switch (requested) {
                 case config_value::type::NUMBER:
-                    try {
-                        int64_t v = boost::lexical_cast<int64_t>(s);
-                        return make_shared<config_long>(value->origin(), v, s);
-                    } catch (boost::bad_lexical_cast &ex) {
-                        // try double
+                    number_converter << s;
+                    int64_t i;
+                    number_converter >> i;
+                    if (!number_converter.fail() && number_converter.str().length() == 0) {
+                        return make_shared<config_long>(value->origin(), i, s);
                     }
-                    try {
-                        double v = boost::lexical_cast<double>(s);
-                        return make_shared<config_double>(value->origin(), v, s);
-                    } catch (boost::bad_lexical_cast &ex) {
-                        // we don't have a number
+                    number_converter.str(std::string());
+
+                    number_converter << s;
+                    double d;
+                    number_converter >> d;
+                    if (!number_converter.fail() && number_converter.str().length() == 0) {
+                        return make_shared<config_double>(value->origin(), d, s);
                     }
                     break;
                 case config_value::type::CONFIG_NULL:
@@ -57,7 +57,7 @@ namespace hocon {
                     // no-op, already a string
                     break;
                 case config_value::type::UNSPECIFIED:
-                    throw config_exception(_("No target value type specified"));
+                    throw config_exception("No target value type specified");
             }
         } else if (requested == config_value::type::STRING) {
             // if we converted null to string here, then you wouldn't properly get a missing value error
@@ -80,11 +80,11 @@ namespace hocon {
                     // no-op, already a string
                     break;
                 case config_value::type::UNSPECIFIED:
-                    throw config_exception(_("No target value type specified"));
+                    throw config_exception("No target value type specified");
             }
         } else if (requested == config_value::type::LIST && value->value_type() == config_value::type::OBJECT) {
             // TODO: implement this later when we support complex config objects
-            throw config_exception(_("We currently do not support lists"));
+            throw config_exception("We currently do not support lists");
         }
 
         return value;

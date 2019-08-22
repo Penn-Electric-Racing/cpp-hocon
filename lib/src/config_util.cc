@@ -1,7 +1,12 @@
 #include <internal/config_util.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
+
+// replace boost
+
+static bool starts_with(const string& s, const string& prefix) {
+    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+}
 
 namespace hocon {
 
@@ -77,8 +82,8 @@ namespace hocon {
             return render_json_string(s);
         }
 
-        if (boost::starts_with(s, "include") || boost::starts_with(s, "true") || boost::starts_with(s, "false") ||
-                boost::starts_with(s, "null") || boost::starts_with(s, "//")) {
+        if (starts_with(s, "include") || starts_with(s, "true") || starts_with(s, "false") ||
+                starts_with(s, "null") || starts_with(s, "//")) {
             return render_json_string(s);
         }
 

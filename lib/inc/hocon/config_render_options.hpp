@@ -1,7 +1,5 @@
 #pragma once
 
-#include "export.h"
-
 namespace hocon {
 
     /**
@@ -17,7 +15,7 @@ namespace hocon {
      *         config_render_options().set_comments(false)
      * </pre>
      */
-    class LIBCPP_HOCON_EXPORT config_render_options {
+    class config_render_options {
     public:
         /** Leaving the default arguments will result in a verbose rendering,
          * which contains comments and therefore is not valid JSON.

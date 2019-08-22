@@ -3,7 +3,6 @@
 #include <string>
 #include <memory>
 #include <hocon/config_value.hpp>
-#include "../export.h"
 
 namespace hocon {
     /**
@@ -23,7 +22,7 @@ namespace hocon {
      * Also, this interface is likely to grow new methods over time, so third-party
      * implementations will break.
      */
-    class LIBCPP_HOCON_EXPORT config_document {
+    class config_document {
     public:
         /**
          * Returns a new config_document that is a copy of the current config_document,

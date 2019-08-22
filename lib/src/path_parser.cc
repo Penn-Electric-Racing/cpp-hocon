@@ -2,14 +2,34 @@
 #include <internal/tokens.hpp>
 #include <sstream>
 #include <internal/values/config_string.hpp>
-#include <boost/algorithm/string.hpp>
-#include <leatherman/locale/locale.hpp>
-
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
 
 using namespace std;
-using namespace boost::algorithm;
+
+static std::string & trim_left(std::string & str) {
+  auto it2 =  std::find_if( str.begin() , str.end() , 
+          [](char ch){ return !std::isspace(ch); } );
+  str.erase( str.begin() , it2);
+  return str;   
+}
+
+
+static std::string & trim_right(std::string & str) {
+  auto it1 =  std::find_if( str.rbegin() , str.rend() , 
+          [](char ch){ return !std::isspace(ch); } );
+  str.erase( it1.base() , str.end() );
+  return str;   
+}
+
+static std::string & trim_right_if_dot(std::string & str) {
+  auto it1 =  std::find_if( str.rbegin() , str.rend() , 
+          [](char ch){ return ch != '.'; } );
+  str.erase( it1.base() , str.end() );
+  return str;   
+}
+
+static std::string & trim(std::string & str) {
+   return trim_left(trim_right(str));
+}
 
 namespace hocon {
 
@@ -64,7 +84,7 @@ namespace hocon {
 
         if (!expression.has_next()) {
             throw bad_path_exception(*origin, original_text,
-                                     _("Expecting a field name or path here, but got nothing"));
+                                     "Expecting a field name or path here, but got nothing");
         }
 
         while (expression.has_next()) {
@@ -117,7 +137,7 @@ namespace hocon {
                     text = t->token_text();
                 } else {
                     throw bad_path_exception(*origin, original_text,
-                                             _("Token not allowed in path expression: {1} (you can double-quote this token if you really want it here)", t->to_string()));
+                                             "Token not allowed in path expression: " + t->to_string() + " (you can double-quote this token if you really want it here)");
                 }
 
                 add_path_text(elements, false, text);
@@ -128,7 +148,7 @@ namespace hocon {
         for (element e : elements) {
             if (e._value.length() == 0 && !e._can_be_empty) {
                 throw bad_path_exception(*origin, original_text,
-                                         _("path has a leading, trailing, or two adjacent '.' (use quoted \"\" empty string if you want an empty element)"));
+                                         "path has a leading, trailing, or two adjacent '.' (use quoted \"\" empty string if you want an empty element)");
             } else {
                 builder.append_key(e._value);
             }
@@ -147,10 +167,14 @@ namespace hocon {
 
         // The split iterator tacks an empty string onto the end of the iterator if the string
         // ends in the split character; so we need to remove trailing '.'
-        boost::trim_right_if(token_text, is_any_of("."));
+        trim_right_if_dot(token_text);
 
         vector<string> token_it;
-        boost::split(token_it, token_text, is_any_of("."));
+
+        std::stringstream splitter;
+        splitter << token_text;
+        std::string token;
+        while(std::getline(splitter, token, '.')) token_it.push_back(token);
 
         token_list split_tokens;
         for (auto& s : token_it) {
@@ -242,7 +266,7 @@ namespace hocon {
 
     path path_parser::speculative_fast_parse_path(std::string const& path_string) {
         string s = path_string;
-        boost::trim(s);
+        trim(s);
         if (looks_unsafe_for_fast_parser(s)) {
             return path { };
         }

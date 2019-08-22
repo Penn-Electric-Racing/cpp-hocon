@@ -1,33 +1,7 @@
 #pragma once
 
-#include "export.h"
-
 namespace hocon {
-
-    /**
-     * A set of options related to resolving substitutions. Substitutions use the
-     * <code>${foo.bar}</code> syntax and are documented in the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">HOCON</a>
-     * spec.
-     * <p>
-     * Typically this class would be used with the method
-     * {@link config#resolve(config_resolve_options)}.
-     * <p>
-     * This object is immutable, so the "setters" return a new object.
-     * <p>
-     * Here is an example of creating a custom {@code config_resolve_options}:
-     *
-     * <pre>
-     *     config_resolve_options options = config_resolve_options()
-     *         .set_use_system_environment(false)
-     * </pre>
-     * <p>
-     * In addition to {@link config_resolve_options}, there's a prebuilt
-     * {@link config_resolve_options#no_system} which avoids looking at any system
-     * environment variables or other external system information. (Right now,
-     * environment variables are the only example.)
-     */
-    class LIBCPP_HOCON_EXPORT config_resolve_options {
+    class config_resolve_options {
     public:
         /**
          * Returns the default resolve options. By default the system environment
@@ -79,5 +53,4 @@ namespace hocon {
         bool _use_system_environment;
         bool _allow_unresovled;
     };
-
 }  // namespace hocon

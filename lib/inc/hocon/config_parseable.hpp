@@ -1,7 +1,6 @@
 #pragma once
 
 #include "types.hpp"
-#include "export.h"
 
 namespace hocon {
 
@@ -16,7 +15,7 @@ namespace hocon {
      * interface is likely to grow new methods over time, so third-party
      * implementations will break.
      */
-    class LIBCPP_HOCON_EXPORT config_parseable {
+    class config_parseable {
     public:
         /**
          * Parse whatever it is. The options should come from

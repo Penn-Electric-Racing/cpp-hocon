@@ -1,14 +1,12 @@
-
 #pragma once
 
 #include "config_origin.hpp"
 #include "config_render_options.hpp"
 #include "config_mergeable.hpp"
 #include "path.hpp"
+
 #include <string>
 #include <vector>
-#include "export.h"
-#include <leatherman/locale/locale.hpp>
 
 namespace hocon {
 
@@ -36,7 +34,7 @@ namespace hocon {
      * Also, this interface is likely to grow new methods over time, so third-party
      * implementations will break.
      */
-    class LIBCPP_HOCON_EXPORT config_value : public config_mergeable, public std::enable_shared_from_this<config_value> {
+    class config_value : public config_mergeable, public std::enable_shared_from_this<config_value> {
         friend class token;
         friend class value;
         friend class default_transformer;
@@ -65,7 +63,7 @@ namespace hocon {
                 case type::CONFIG_NULL: return "null";
                 case type::STRING: return "string";
                 case type::UNSPECIFIED: return "unspecified";
-                default: throw std::logic_error(leatherman::locale::format("Got impossible value for type enum"));
+                default: throw std::logic_error("Got impossible value for type enum");
             }
         }
 
