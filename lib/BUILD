@@ -4,5 +4,6 @@ cc_library(
                  "inc/internal/*.hpp", "inc/internal/nodes/*.hpp", "inc/internal/values/*.hpp"]),
     hdrs = glob(["inc/hocon/*.hpp", "inc/hocon/parser/*.hpp"]),
     deps = ["@json//:lib"],
-    includes = ["inc"]
+    includes = ["inc"],
+    visibility = ["//visibility:public"]
 )
