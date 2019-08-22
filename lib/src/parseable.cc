@@ -226,13 +226,13 @@ namespace hocon {
     shared_value parseable::parse_value(shared_origin origin, config_parse_options const& final_options) const {
         try {
             return raw_parse_value(origin, final_options);
-        } catch (std::ios_base::failure& e) {
+        } catch (const runtime_error& e) {
             if (final_options.get_allow_missing()) {
                 return make_shared<simple_config_object>(
                         make_shared<simple_config_origin>(origin->description() + " (not found)"),
                         unordered_map<string, shared_value>());
             } else {
-                throw io_exception(*origin, std::string(typeid(*this).name()) + ": " + e.what());
+                throw io_exception(*origin, e.what());
             }
         }
     }
@@ -279,7 +279,7 @@ namespace hocon {
                                                                config_parse_options const& final_options) const {
         try {
             return raw_parse_document(origin, final_options);
-        } catch (std::ios_base::failure& e) {
+        } catch (const runtime_error& e) {
             if (final_options.get_allow_missing()) {
                 shared_node_list children;
                 children.push_back(make_shared<config_node_object>(shared_node_list { }));
@@ -329,8 +329,8 @@ namespace hocon {
 
     unique_ptr<istream> parseable_file::reader() const {
         std::ifstream *is = new std::ifstream();
-        is->exceptions(is->exceptions() | std::ios::failbit);
         is->open(_input.c_str());
+        if (!is->is_open()) throw runtime_error("not found");
         return unique_ptr<istream>(is);
     }
 
