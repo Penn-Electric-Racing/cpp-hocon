@@ -23,7 +23,7 @@ namespace hocon {
                     number_converter << s;
                     int64_t i;
                     number_converter >> i;
-                    if (!number_converter.fail() && number_converter.str().length() == 0) {
+                    if (!number_converter.fail()) {
                         return make_shared<config_long>(value->origin(), i, s);
                     }
                     number_converter.str(std::string());
@@ -31,7 +31,7 @@ namespace hocon {
                     number_converter << s;
                     double d;
                     number_converter >> d;
-                    if (!number_converter.fail() && number_converter.str().length() == 0) {
+                    if (!number_converter.fail()) {
                         return make_shared<config_double>(value->origin(), d, s);
                     }
                     break;

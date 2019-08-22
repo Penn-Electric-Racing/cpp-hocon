@@ -470,7 +470,7 @@ namespace hocon {
             number_converter << number_string;
             double d;
             number_converter >> d;
-            if (!number_converter.fail() && number_converter.str().length() == 0) {
+            if (!number_converter.fail()) {
                 return convert(d, get_units(unit_string));
             } else {
                 throw bad_value_exception(*origin_for_exception, path_for_exception, "Value '" + number_string + "' could not be converted to a number.");

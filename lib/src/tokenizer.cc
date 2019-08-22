@@ -242,7 +242,7 @@ namespace hocon {
         if (contained_decimal_or_E) number_converter >> d;
         else number_converter >> i;
 
-        if (!number_converter.fail() && number_converter.str().length() == 0) {
+        if (!number_converter.fail()) {
             if (contained_decimal_or_E) {
                 return make_shared<value>(config_number::new_number(
                         _line_origin, d, result));
