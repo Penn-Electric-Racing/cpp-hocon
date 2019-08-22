@@ -4,7 +4,6 @@
 #include <internal/tokenizer.hpp>
 #include <internal/config_document_parser.hpp>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
 
 using namespace std;
 

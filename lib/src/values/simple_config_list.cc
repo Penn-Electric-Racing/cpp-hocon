@@ -64,7 +64,8 @@ namespace hocon {
             return resolve_result<shared_value>(context, shared_from_this());
         } else {
             resolve_modifier mod{context, source.push_parent(dynamic_pointer_cast<const container>(shared_from_this()))};
-            auto value = modify_may_throw(mod, context.options().get_allow_unresolved() ? boost::optional<resolve_status>() : resolve_status::RESOLVED);
+            resolve_status s = resolve_status::RESOLVED;
+            auto value = modify_may_throw(mod, context.options().get_allow_unresolved() ? nullptr : &s);
             return resolve_result<shared_value>(mod.context, value);
         }
     }
@@ -72,7 +73,8 @@ namespace hocon {
     shared_value simple_config_list::relativized(const std::string prefix) const
     {
         no_exceptions_modifier modifier(move(prefix));
-        return modify(modifier, get_resolve_status());
+        resolve_status stat = get_resolve_status();
+        return modify(modifier, &stat);
     }
 
     std::shared_ptr<const simple_config_list> simple_config_list::concatenate(shared_ptr<const simple_config_list> other) const
@@ -173,7 +175,7 @@ namespace hocon {
 
     std::shared_ptr<const simple_config_list>
     simple_config_list::modify(no_exceptions_modifier& modifier,
-                               boost::optional<resolve_status> new_resolve_status) const
+                               resolve_status* new_resolve_status) const
     {
         // TODO: Do we want similar exception wrapping?
         return modify_may_throw(modifier, new_resolve_status);
@@ -181,7 +183,7 @@ namespace hocon {
 
     std::shared_ptr<const simple_config_list>
     simple_config_list::modify_may_throw(modifier& modifier,
-                                         boost::optional<resolve_status> new_resolve_status) const
+                                         resolve_status* new_resolve_status) const
     {
         bool init = false;
         vector<shared_value> changed;

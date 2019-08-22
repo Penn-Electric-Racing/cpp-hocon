@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <boost/optional.hpp>
 
 namespace hocon {
 
@@ -64,10 +63,10 @@ namespace hocon {
         const resolve_status _resolved;
 
         std::shared_ptr<const simple_config_list>
-        modify(no_exceptions_modifier& modifier, boost::optional<resolve_status> new_resolve_status) const;
+        modify(no_exceptions_modifier& modifier, resolve_status* new_resolve_status) const;
 
         std::shared_ptr<const simple_config_list>
-        modify_may_throw(modifier& modifier, boost::optional<resolve_status> new_resolve_status) const;
+        modify_may_throw(modifier& modifier, resolve_status* new_resolve_status) const;
 
         struct resolve_modifier;
     };

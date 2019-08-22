@@ -1,11 +1,16 @@
 #include <hocon/config_value.hpp>
 #include <internal/simple_config_origin.hpp>
 #include <hocon/config_exception.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <algorithm>
 #include <stdexcept>
 
 using namespace std;
+
+//replace boost
+
+static bool starts_with(const string& s, const string& prefix) {
+    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+}
 
 namespace hocon {
 
@@ -136,11 +141,11 @@ namespace hocon {
         // cluttering it.
         string a_desc { a->description() };
         string b_desc { b->description() };
-        if (boost::starts_with(a_desc, MERGE_OF_PREFIX)) {
+        if (starts_with(a_desc, MERGE_OF_PREFIX)) {
             a_desc = a_desc.substr(MERGE_OF_PREFIX.length());
         }
 
-        if (boost::starts_with(b_desc, MERGE_OF_PREFIX)) {
+        if (starts_with(b_desc, MERGE_OF_PREFIX)) {
             b_desc = b_desc.substr(MERGE_OF_PREFIX.length());
         }
 

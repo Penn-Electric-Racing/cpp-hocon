@@ -1,9 +1,6 @@
 #include <hocon/config_parse_options.hpp>
 #include <hocon/config_includer.hpp>
-#include <leatherman/locale/locale.hpp>
 
-// Mark string for translation (alias for leatherman::locale::format)
-using leatherman::locale::_;
 
 using namespace std;
 
@@ -68,7 +65,7 @@ namespace hocon {
     config_parse_options config_parse_options::prepend_includer(shared_includer includer) const
     {
         if (!includer) {
-            throw runtime_error(_("null includer passed to prepend_includer"));
+            throw runtime_error("null includer passed to prepend_includer");
         }
         if (_includer == includer) {
             return *this;
@@ -82,7 +79,7 @@ namespace hocon {
     config_parse_options config_parse_options::append_includer(shared_includer includer) const
     {
         if (!includer) {
-            throw runtime_error(_("null includer passed to append_includer"));
+            throw runtime_error("null includer passed to append_includer");
         }
         if (_includer == includer) {
             return *this;
