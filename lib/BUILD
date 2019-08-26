@@ -3,7 +3,7 @@ cc_library(
     srcs = glob(["src/*.cc", "src/nodes/*.cc", "src/values/*.cc",
                  "inc/internal/*.hpp", "inc/internal/nodes/*.hpp", "inc/internal/values/*.hpp"]),
     hdrs = glob(["inc/hocon/*.hpp", "inc/hocon/parser/*.hpp"]),
-    deps = ["@json//:lib"],
+    deps = ["@json//:json"],
     includes = ["inc"],
     visibility = ["//visibility:public"]
 )
